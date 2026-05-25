@@ -6,6 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
     <title>Document</title>
+    <script>
+        if (localStorage.getItem("loggedIn") !== "true") {
+            window.location.href = "login.html";
+        }
+    </script>
 
 </head>
 <body>
@@ -616,9 +621,19 @@
          <polyline class="st133" points="749.00262,464.39771 749.79279,461.56708 752.13806,463.33813 	"/>
      </g>
      </svg>
-     <button class="next-button" type="button" onclick="location.href='index1.html'">tiếp</button>
-     
-     
-     </section>
+      <div class="button-group">
+          <button class="next-button" type="button" onclick="location.href='index1.html'">tiếp</button>
+          <button class="matrix-button" type="button" onclick="location.href='index2.html'">matrix</button>
+      </div>
+      <button class="logout-btn" type="button" onclick="logout()">Đăng xuất</button>
+      
+      <script>
+          function logout() {
+              localStorage.removeItem("loggedIn");
+              localStorage.removeItem("username");
+              window.location.href = "login.html";
+          }
+      </script>
+      </section>
 </body>
 </html>

@@ -2,13 +2,18 @@
 <HTML>
  <HEAD>
   <TITLE> Heart </TITLE>
+  <script>
+       if (localStorage.getItem("loggedIn") !== "true") {
+           window.location.href = "login.html";
+       }
+   </script>
   <META NAME="Generator" CONTENT="EditPlus">
   <META NAME="Author" CONTENT="">
   <META NAME="Keywords" CONTENT="">
   <META NAME="Description" CONTENT="">
  
-   
-  <style>
+   <link rel="stylesheet" href="style.css">
+   <style>
   html, body {
   height: 100%;
   padding: 0;
@@ -59,10 +64,7 @@ canvas {
   margin: auto;
   height: 500px;
   width: 500px;
-  border-radius: 50%;
   background: transparent;
-  border: 8px solid red;
-  box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
   z-index: 1000;
   pointer-events: none;
   animation: animate 1.3s infinite;
@@ -122,15 +124,123 @@ canvas {
   outline: none;
   box-shadow: 0 0 0 4px rgba(255,90,90,0.12);
 }
+
+/* Troll Modal Overlay */
+.troll-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(15px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+.troll-modal.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.troll-card {
+  background: rgba(25, 12, 20, 0.95);
+  border: 1px solid rgba(255, 92, 164, 0.4);
+  border-radius: 20px;
+  padding: 2.5rem;
+  width: 90%;
+  max-width: 420px;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(255, 92, 164, 0.25);
+  transform: scale(0.8);
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.troll-modal.active .troll-card {
+  transform: scale(1);
+}
+
+.troll-card h3 {
+  color: #ff5ca4;
+  font-size: 1.6rem;
+  margin-top: 0;
+  margin-bottom: 1.2rem;
+  letter-spacing: 1px;
+}
+
+.troll-card p {
+  color: #eee;
+  font-size: 1.05rem;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  position: relative;
+  height: 50px;
+  transition: flex-direction 0.2s ease;
+}
+
+.modal-btn {
+  padding: 0.75rem 1.4rem;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-yes {
+  background: linear-gradient(135deg, #ff5c8a 0%, #ff9d5c 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(255, 92, 164, 0.4);
+}
+
+.btn-yes:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(255, 92, 164, 0.6);
+}
+
+.btn-no {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-no:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
   </style>
  </HEAD>
  
  <BODY>
   <div class="box">
     <canvas id="pinkboard"></canvas>
-    <div class="center-text">LÊU LÊU<br>Ahiiii đồ ngốc</div>
     <a href="index.html" class="back-button" aria-label="Quay lại trang chủ">Quay lại</a>
   </div>
+
+  <!-- Troll Modal -->
+  <div class="troll-modal" id="trollModal">
+    <div class="troll-card">
+      <h3>Xác nhận thông tin 🚨</h3>
+      <p>Trước khi quay lại trang chủ, bạn có thừa nhận bản thân mình là <strong>"đồ ngốc"</strong> không? 😉</p>
+      <div class="modal-buttons" id="modalButtons">
+        <button class="modal-btn btn-yes" id="btnYes">Có, mình ngốc lắm 🥺</button>
+        <button class="modal-btn btn-no" id="btnNo">Không nhé, mình thông minh 😎</button>
+      </div>
+    </div>
+  </div>
+
+  <button class="logout-btn" type="button" onclick="logout()">Đăng xuất</button>
   <script>
   /*
  * Settings
@@ -363,7 +473,205 @@ var ParticlePool = (function() {
     render();
   }, 10);
 })(document.getElementById('pinkboard'));
+
+// ==================== TROLL SYSTEM ====================
+function playBoingSound() {
+    try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(150, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(380, ctx.currentTime + 0.12);
+        osc.frequency.exponentialRampToValueAtTime(110, ctx.currentTime + 0.28);
+        
+        gain.gain.setValueAtTime(0.2, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.28);
+        
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        
+        osc.start();
+        osc.stop(ctx.currentTime + 0.28);
+    } catch(e) {
+        console.log("Audio not allowed yet");
+    }
+}
+
+function playSuccessChime() {
+    try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+        osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1); // E5
+        osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.2); // G5
+        osc.frequency.setValueAtTime(1046.50, ctx.currentTime + 0.3); // C6
+        
+        gain.gain.setValueAtTime(0.25, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6);
+        
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.6);
+    } catch(e) {
+        console.log("Audio error");
+    }
+}
+
+// 1. Runaway escaping back button
+const backBtn = document.querySelector('.back-button');
+let escapeCount = 0;
+
+if (backBtn) {
+    // Intercept clicks
+    backBtn.addEventListener('click', (e) => {
+        if (escapeCount < 6) {
+            e.preventDefault();
+            escapeBtn();
+        } else {
+            // Trigger confirmation modal instead of going back immediately!
+            e.preventDefault();
+            document.getElementById('trollModal').classList.add('active');
+        }
+    });
+
+    backBtn.addEventListener('mouseover', (e) => {
+        if (escapeCount < 6) {
+            escapeBtn();
+        }
+    });
+}
+
+function escapeBtn() {
+    playBoingSound();
+    
+    const btnWidth = backBtn.offsetWidth;
+    const btnHeight = backBtn.offsetHeight;
+    
+    const maxX = window.innerWidth - btnWidth - 40;
+    const maxY = window.innerHeight - btnHeight - 40;
+    
+    const randomX = Math.max(20, Math.floor(Math.random() * maxX));
+    const randomY = Math.max(20, Math.floor(Math.random() * maxY));
+    
+    backBtn.style.position = 'fixed';
+    backBtn.style.left = randomX + 'px';
+    backBtn.style.top = randomY + 'px';
+    backBtn.style.bottom = 'auto';
+    backBtn.style.transform = 'none';
+    backBtn.style.zIndex = '99999';
+    
+    escapeCount++;
+    
+    if (escapeCount === 1) backBtn.innerText = "Hụt rồi! 😜";
+    if (escapeCount === 2) backBtn.innerText = "Lại trượt! 😂";
+    if (escapeCount === 3) backBtn.innerText = "Còn lâu mới bấm được!";
+    if (escapeCount === 4) backBtn.innerText = "Đừng cố hihi! 🤫";
+    if (escapeCount === 5) backBtn.innerText = "Bắt tôi đi!";
+    if (escapeCount === 6) {
+        backBtn.innerText = "Thôi tha đó, bấm đi! 🥺";
+        backBtn.style.background = "linear-gradient(135deg, #10b981 0%, #059669 100%)"; // Green color
+    }
+}
+
+// 2. Modal logic: Swap buttons on hover
+const btnNo = document.getElementById('btnNo');
+const btnYes = document.getElementById('btnYes');
+const modalButtons = document.getElementById('modalButtons');
+
+if (btnNo && modalButtons) {
+    btnNo.addEventListener('mouseover', () => {
+        // Swap positions of Yes and No buttons
+        if (modalButtons.style.flexDirection === 'row-reverse') {
+            modalButtons.style.flexDirection = 'row';
+        } else {
+            modalButtons.style.flexDirection = 'row-reverse';
+        }
+        playBoingSound();
+    });
+    
+    btnNo.addEventListener('click', (e) => {
+        e.preventDefault();
+        alert("Không được nói dối! Hệ thống phát hiện bạn đang nói dối! 🤖");
+        // Force the Yes outcome
+        triggerYesOutcome();
+    });
+}
+
+if (btnYes) {
+    btnYes.addEventListener('click', () => {
+        triggerYesOutcome();
+    });
+}
+
+function triggerYesOutcome() {
+    playSuccessChime();
+    document.getElementById('trollModal').classList.remove('active');
+    
+    // Create heavy heart confetti explosion
+    createHeartConfetti();
+    
+    // Nice alert
+    setTimeout(() => {
+        alert("Ngoan lắm! Phải thừa nhận thế chứ. Nhưng cảnh báo: Hệ thống của bạn đang bị kiểm soát! 😈");
+        window.location.href = "index2.html";
+    }, 2000);
+}
+
+function createHeartConfetti() {
+    const colors = ['#ff5ca4', '#ff8a5c', '#ff3b3b', '#ff9d5c'];
+    for (let i = 0; i < 100; i++) {
+        const heart = document.createElement('div');
+        heart.innerHTML = '❤️';
+        heart.style.position = 'fixed';
+        heart.style.left = Math.random() * 100 + 'vw';
+        heart.style.top = '-50px';
+        heart.style.fontSize = (Math.random() * 20 + 15) + 'px';
+        heart.style.zIndex = '999999';
+        heart.style.pointerEvents = 'none';
+        heart.style.transform = `rotate(${Math.random() * 360}deg)`;
+        
+        // Physics variables
+        const speed = Math.random() * 5 + 3;
+        const drift = Math.random() * 4 - 2;
+        let rotation = Math.random() * 360;
+        const rotSpeed = Math.random() * 4 - 2;
+        
+        document.body.appendChild(heart);
+        
+        let topPos = -50;
+        let leftPos = parseFloat(heart.style.left);
+        
+        const interval = setInterval(() => {
+            topPos += speed;
+            leftPos += drift;
+            rotation += rotSpeed;
+            
+            heart.style.top = topPos + 'px';
+            heart.style.left = leftPos + 'px';
+            heart.style.transform = `rotate(${rotation}deg)`;
+            
+            if (topPos > window.innerHeight) {
+                clearInterval(interval);
+                heart.remove();
+            }
+        }, 16);
+    }
+}
   </script>
- 
+  
+  <button class="logout-btn" type="button" onclick="logout()">Đăng xuất</button>
+  <script>
+      function logout() {
+          localStorage.removeItem("loggedIn");
+          localStorage.removeItem("username");
+          window.location.href = "login.html";
+      }
+  </script>
  </BODY>
 </HTML>

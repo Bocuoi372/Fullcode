@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hacking...</title>
+    <link rel="stylesheet" href="style.css">
+    <script>
+        if (localStorage.getItem("loggedIn") !== "true") {
+            window.location.href = "login.html";
+        }
+    </script>
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            overflow: hidden;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        canvas {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        /* Marquee horizontal scrolling text */
+        .marquee-container {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.75);
+            border-top: 2px solid #0f0;
+            border-bottom: 2px solid #0f0;
+            padding: 18px 0;
+            z-index: 20;
+            transform: translateY(-50%);
+            display: none;
+            /* Hidden by default */
+            box-shadow: 0 0 25px rgba(0, 255, 0, 0.3);
+            backdrop-filter: blur(8px);
+            pointer-events: none;
+        }
+
+        .marquee-text {
+            display: inline-block;
+            white-space: nowrap;
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #0f0;
+            text-shadow: 0 0 10px #0f0, 0 0 20px #0f0;
+            animation: marquee 14s linear infinite;
+            padding-left: 100%;
+        }
+
+        @keyframes marquee {
+            0% {
+                transform: translate3d(0, 0, 0);
+            }
+
+            100% {
+                transform: translate3d(-100%, 0, 0);
+            }
+        }
+
+        .system-status {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 10;
+            color: #0f0;
+            font-size: 0.9rem;
+            font-family: monospace;
+            pointer-events: none;
+            background: rgba(0, 0, 0, 0.75);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #0f0;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
+            max-width: 380px;
+            line-height: 1.5;
+        }
+
+        .back-home-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 9999;
+            padding: 0.6rem 1.2rem;
+            background: rgba(0, 255, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 255, 0, 0.3);
+            border-radius: 999px;
+            color: #0f0;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 30px rgba(0, 255, 0, 0.15);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .back-home-btn:hover {
+            background: rgba(0, 255, 0, 0.25);
+            border-color: #0f0;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 255, 0, 0.3);
+        }
+
+        .back-home-btn:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+
+<body>
+
+    <a href="index.html" class="back-home-btn">← Về trang chủ</a>
+    <button class="logout-btn" onclick="logout()">Đăng xuất</button>
+
+    <!-- Marquee Banner (Initially Hidden) -->
+    <div class="marquee-container" id="marqueeContainer">
+        <div class="marquee-text" id="marqueeText"></div>
+    </div>
+
+    <div class="system-status" id="terminalStatus">
+        > Access Granted...<br>
+        > Downloading Brain.exe [0%]<br>
+        > Executing Troll protocol...
+    </div>
+
+    <canvas id="matrixCanvas"></canvas>
+
+    <script>
+        // Logout script
+        function logout() {
+            localStorage.removeItem("loggedIn");
+            localStorage.removeItem("username");
+            window.location.href = "login.html";
+        }
+
+        // Matrix Rain implementation
+        const canvas = document.getElementById('matrixCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Characters to draw (Katakana + Latin + Special Troll words)
+        const katakana = "ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const alphabet = katakana.split("");
+
+        const trollPhrases = ["HACKED", "DONGOC", "LEULEU", "AHII"];
+
+        const fontSize = 16;
+        let columns = canvas.width / fontSize;
+
+        const rainDrops = [];
+
+        // Initialize rain drops positions
+        for (let x = 0; x < columns; x++) {
+            rainDrops[x] = Math.random() * -100; // Start at different heights above canvas
+        }
+
+        function drawMatrix() {
+            // Draw slightly translucent black background to create trail effect
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.06)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#0F0'; // Green text
+            ctx.font = fontSize + 'px monospace';
+
+            for (let i = 0; i < rainDrops.length; i++) {
+                // Occasionally render a whole troll phrase instead of just single characters
+                let text = "";
+                if (Math.random() > 0.99) {
+                    text = trollPhrases[Math.floor(Math.random() * trollPhrases.length)];
+                } else {
+                    text = alphabet[Math.floor(Math.random() * alphabet.length)];
+                }
+
+                // First character in a column is white/lighter for a glowing head effect
+                if (Math.random() > 0.97) {
+                    ctx.fillStyle = '#FFF';
+                } else {
+                    ctx.fillStyle = '#0F0';
+                }
+
+                // Draw the text
+                ctx.fillText(text, i * fontSize, rainDrops[i] * fontSize);
+
+                // Reset drop to top of screen once it crosses bottom edge
+                if (rainDrops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    rainDrops[i] = 0;
+                }
+
+                // Move down
+                rainDrops[i] += 0.85; // Speed adjustment
+            }
+        }
+
+        setInterval(drawMatrix, 30);
+
+        // Resize column count on window resize dynamically
+        window.addEventListener('resize', () => {
+            columns = canvas.width / fontSize;
+            while (rainDrops.length < columns) {
+                rainDrops.push(Math.random() * -100);
+            }
+        });
+
+        // Retrieve username
+        const storedUsername = localStorage.getItem("username") || "bạn";
+
+        // Funny terminal log simulation
+        const terminal = document.getElementById('terminalStatus');
+        let percent = 0;
+        let alarmTriggered = false;
+
+        const messages = [
+            "> Access Granted...",
+            "> Connection established with target...",
+            "> System compromised successfully.",
+            "> Downloading TrollBrain.dll...",
+            "> Copying local files...",
+            "> Sending virus 'AhihiDoNgoc.exe'...",
+            "> Mission completed!"
+        ];
+
+        let msgIndex = 0;
+
+        function playHackingAlertSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                let time = ctx.currentTime;
+                // Generate a series of alarming beeps
+                for (let i = 0; i < 3; i++) {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(880, time);
+                    osc.frequency.exponentialRampToValueAtTime(440, time + 0.15);
+
+                    gain.gain.setValueAtTime(0.15, time);
+                    gain.gain.exponentialRampToValueAtTime(0.01, time + 0.25);
+
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+
+                    osc.start(time);
+                    osc.stop(time + 0.25);
+
+                    time += 0.3;
+                }
+            } catch (e) {
+                console.log("Audio play blocked");
+            }
+        }
+
+        const updateInterval = setInterval(() => {
+            if (percent < 100) {
+                percent += Math.floor(Math.random() * 4) + 1;
+                if (percent > 100) percent = 100;
+            } else {
+                clearInterval(updateInterval);
+                if (!alarmTriggered) {
+                    alarmTriggered = true;
+                    // Trigger sound alert
+                    playHackingAlertSound();
+
+                    // Populate horizontal marquee text
+                    const marqueeText = document.getElementById('marqueeText');
+                    const textContent = `CẢNH BÁO: TÀI KHOẢN CỦA ${storedUsername.toUpperCase()} ĐÃ BỊ HACK THÀNH CÔNG! ĐỒ NGỐC LÊU LÊU AHIHI!!! 🤪 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`;
+                    marqueeText.innerHTML = textContent.repeat(3); // repeat to fill space nicely
+
+                    // Show horizontal marquee
+                    document.getElementById('marqueeContainer').style.display = 'block';
+                }
+            }
+
+            if (percent % 15 === 0 && msgIndex < messages.length - 1) {
+                msgIndex++;
+            }
+
+            terminal.innerHTML = `
+                ${messages.slice(0, msgIndex + 1).join("<br>")}<br>
+                > Downloading Brain.exe [${percent}%]<br>
+                > Status: ${percent === 100 ? "COMPLETED. Targeted device is now officially silly! 🤪" : "ACTIVE"}
+            `;
+        }, 300);
+
+        // 1. Secret Escape Shortcut: Press ESC to logout & return to login.html
+        window.addEventListener('keydown', (e) => {
+            if (e.key === "Escape") {
+                logout();
+            }
+        });
+
+        // 2. Transition: Hide all texts and buttons after marquee runs 1 time
+        let iterationCount = 0;
+        const marqueeTextEl = document.getElementById('marqueeText');
+
+        if (marqueeTextEl) {
+            marqueeTextEl.addEventListener('animationiteration', () => {
+                iterationCount++;
+                if (iterationCount >= 1) {
+                    // Hide marquee banner
+                    document.getElementById('marqueeContainer').style.display = 'none';
+
+                    // Hide terminal status box
+                    document.getElementById('terminalStatus').style.display = 'none';
+
+                    // Hide floating navigation and logout buttons
+                    document.querySelectorAll('.back-home-btn, .logout-btn').forEach(btn => {
+                        btn.style.display = 'none';
+                    });
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>
